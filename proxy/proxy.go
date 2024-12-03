@@ -13,8 +13,8 @@ import (
 
 var (
 	server *http.Server
-	errLog = logger.Err
-	dbgLog = logger.Dbg
+	errLog = logger.New("ERROR")
+	dbgLog = logger.New("DEBUG")
 )
 
 // recover function

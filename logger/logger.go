@@ -5,14 +5,18 @@ import (
 	"os"
 )
 
-var (
-	Inf *log.Logger
-	Err *log.Logger
-	Dbg *log.Logger
-)
+func New(level string) *log.Logger {
+	var prefix string
+	var out = os.Stdout
 
-func init() {
-	Inf = log.New(os.Stdout, "[INFO] ", log.Ldate|log.Ltime)
-	Dbg = log.New(os.Stdout, "[DEBUG] ", log.Ldate|log.Ltime)
-	Err = log.New(os.Stderr, "[ERROR] ", log.Ldate|log.Ltime)
+	switch level {
+	case "INFO", "info":
+		prefix = "[INFO] "
+	case "DEBUG", "debug":
+		prefix = "[DEBUG] "
+	case "ERROR", "error":
+		prefix = "[ERROR] "
+		out = os.Stderr
+	}
+	return log.New(out, prefix, log.Ldate|log.Ltime)
 }
