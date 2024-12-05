@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+
 	port := flag.Int("port", 3000, "the port on which the caching proxy server will run")
 	origin := flag.String("origin", "", "the URL of the server to which the requests will be forwarded")
 	flag.Parse()
