@@ -47,6 +47,7 @@ func validateOrigin(origin string) (string, string) {
 	return parsedURL.Host, parsedURL.Scheme + "://"
 }
 
+// create new client
 func New(remote string) *Client {
 	host, scheme := validateOrigin(remote)
 	return &Client{
@@ -56,6 +57,7 @@ func New(remote string) *Client {
 	}
 }
 
+// send client request
 func (client *Client) SendRequest(request *ClientReqRes) ClientReqRes {
 	request.Uri = client.scheme + client.origin + request.Uri
 

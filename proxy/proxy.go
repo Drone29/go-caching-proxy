@@ -27,12 +27,13 @@ func recover_hdl(w http.ResponseWriter) {
 
 // send response to the caller
 func send_response(w http.ResponseWriter, resp *client.ClientReqRes) {
-	w.WriteHeader(resp.RespCode)
+
 	for key, values := range resp.Headers {
 		for _, value := range values {
 			w.Header().Add(key, value)
 		}
 	}
+	w.WriteHeader(resp.RespCode)
 	w.Write(resp.Body)
 }
 

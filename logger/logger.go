@@ -17,6 +17,8 @@ func New(level string) *log.Logger {
 	case "ERROR", "error":
 		prefix = "[ERROR] "
 		out = os.Stderr
+	default:
+		prefix = level
 	}
 	return log.New(out, prefix, log.Ldate|log.Ltime|log.Lmsgprefix)
 }
