@@ -18,5 +18,5 @@ func New(level string) *log.Logger {
 		prefix = "[ERROR] "
 		out = os.Stderr
 	}
-	return log.New(out, prefix, log.Ldate|log.Ltime)
+	return log.New(out, prefix, log.Ldate|log.Ltime|log.Lmsgprefix)
 }
