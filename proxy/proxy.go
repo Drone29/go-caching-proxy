@@ -45,6 +45,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		url += "?" + r.URL.RawQuery
 	}
 
+	plog.Debugf("sending %s request to %s\n", r.Method, url)
+
 	resp := oClient.SendRequest(&client.ClientReqRes{
 		Method:  r.Method,
 		Uri:     url,
@@ -68,8 +70,8 @@ func Start(port int, origin string, log *logger.Logger) {
 		panic("Logger is nil")
 	}
 
-	oClient = client.New(origin)
 	plog = log
+	oClient = client.New(origin, log)
 
 	plog.Infof("port: %d", port)
 	plog.Infof("origin: %s", origin)

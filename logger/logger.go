@@ -20,7 +20,9 @@ func (logger *Logger) Errorf(format string, v ...any) {
 }
 
 func (logger *Logger) Debugf(format string, v ...any) {
-	logger.debug.Printf(format, v...)
+	if logger.debug != nil {
+		logger.debug.Printf(format, v...)
+	}
 }
 
 // create a new logger
