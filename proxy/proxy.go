@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"caching-proxy/logger"
+	"caching-proxy/proxy/cache"
 	"caching-proxy/proxy/client"
 	"caching-proxy/proxy/helpers"
 	"caching-proxy/proxy/request"
@@ -15,6 +16,7 @@ var (
 	server  *http.Server
 	oClient *client.Client
 	plog    *logger.Logger
+	pcache  *cache.Cache
 )
 
 // recover function
@@ -46,14 +48,25 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		url += "?" + r.URL.RawQuery
 	}
 
-	plog.Debugf("sending %s request to %s\n", r.Method, url)
-
-	resp := oClient.SendRequest(&request.Request{
-		Method:  r.Method,
-		Uri:     url,
-		Headers: r.Header,
-		Body:    helpers.ReadBody(r.Body),
-	})
+	// check if exists in cache
+	resp, ok := pcache.Get(url)
+	if !ok {
+		// doesn't exist
+		plog.Debugf("sending %s request to %s\n", r.Method, url)
+		resp = oClient.SendRequest(&request.Request{
+			Method:  r.Method,
+			Uri:     url,
+			Headers: r.Header,
+			Body:    helpers.ReadBody(r.Body),
+		})
+		plog.Debugf("saving %s to cache\n", url)
+		pcache.Put(url, resp)
+		resp.Headers["X-Cache"] = []string{"MISS"}
+	} else {
+		// exists
+		plog.Debugf("found request existing in cache\n")
+		resp.Headers["X-Cache"] = []string{"HIT"}
+	}
 
 	send_response(w, &resp)
 }
@@ -73,6 +86,7 @@ func Start(port int, origin string, log *logger.Logger) {
 
 	plog = log
 	oClient = client.New(origin, log)
+	pcache = cache.New()
 
 	plog.Infof("port: %d", port)
 	plog.Infof("origin: %s", origin)
