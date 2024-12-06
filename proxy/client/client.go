@@ -84,7 +84,7 @@ func (client *Client) SendRequest(request *ClientReqRes) ClientReqRes {
 	req.Header = request.Headers
 	req.Header.Set("Host", client.origin)
 
-	client.clog.Debugf("request headers: %v\n", req.Header)
+	// client.clog.Debugf("request headers: %v\n", req.Header)
 
 	resp, err := client.handle.Do(req)
 	if err != nil {
@@ -92,7 +92,7 @@ func (client *Client) SendRequest(request *ClientReqRes) ClientReqRes {
 	}
 
 	client.clog.Debugf("response status %s\n", resp.Status)
-	client.clog.Debugf("response headers %v\n", resp.Header)
+	// client.clog.Debugf("response headers %v\n", resp.Header)
 
 	return ClientReqRes{
 		Body:       helpers.ReadBody(resp.Body),
