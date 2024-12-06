@@ -4,6 +4,7 @@ import (
 	"caching-proxy/logger"
 	"caching-proxy/proxy/client"
 	"caching-proxy/proxy/helpers"
+	"caching-proxy/proxy/request"
 	"context"
 	"fmt"
 	"net/http"
@@ -25,7 +26,7 @@ func recover_hdl(w http.ResponseWriter) {
 }
 
 // send response to the caller
-func send_response(w http.ResponseWriter, resp *client.ClientReqRes) {
+func send_response(w http.ResponseWriter, resp *request.Request) {
 
 	for key, values := range resp.Headers {
 		for _, value := range values {
@@ -47,7 +48,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	plog.Debugf("sending %s request to %s\n", r.Method, url)
 
-	resp := oClient.SendRequest(&client.ClientReqRes{
+	resp := oClient.SendRequest(&request.Request{
 		Method:  r.Method,
 		Uri:     url,
 		Headers: r.Header,

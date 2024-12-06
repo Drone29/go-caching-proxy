@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"caching-proxy/logger"
 	"caching-proxy/proxy/helpers"
+	"caching-proxy/proxy/request"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,16 +18,7 @@ type Client struct {
 	clog   *logger.Logger
 }
 
-type ClientReqRes struct {
-	Body    []byte
-	Headers map[string][]string
-	// request only
-	Method string
-	Uri    string
-	// response only
-	RespStatus string
-	RespCode   int
-}
+type Request = request.Request
 
 const default_scheme = "http://"
 
@@ -64,7 +56,7 @@ func New(remote string, log *logger.Logger) *Client {
 }
 
 // send client request
-func (client *Client) SendRequest(request *ClientReqRes) ClientReqRes {
+func (client *Client) SendRequest(request *Request) Request {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -94,7 +86,7 @@ func (client *Client) SendRequest(request *ClientReqRes) ClientReqRes {
 	client.clog.Debugf("response status %s\n", resp.Status)
 	// client.clog.Debugf("response headers %v\n", resp.Header)
 
-	return ClientReqRes{
+	return Request{
 		Body:       helpers.ReadBody(resp.Body),
 		Headers:    resp.Header,
 		RespStatus: resp.Status,
