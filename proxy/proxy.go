@@ -13,14 +13,13 @@ import (
 var (
 	server  *http.Server
 	oClient *client.Client
-	errLog  = logger.New("ERROR")
-	dbgLog  = logger.New("DEBUG")
+	plog    *logger.Logger
 )
 
 // recover function
 func recover_hdl(w http.ResponseWriter) {
 	if r := recover(); r != nil {
-		errLog.Printf("%v", r)
+		plog.Errorf("%v\n", r)
 		http.Error(w, fmt.Sprintf("Internal error: %v", r), http.StatusInternalServerError) //500
 	}
 }
@@ -57,7 +56,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 // start proxy
-func Start(port int, origin string) {
+func Start(port int, origin string, log *logger.Logger) {
 
 	if port <= 0 {
 		panic("Invalid port")
@@ -65,11 +64,15 @@ func Start(port int, origin string) {
 	if origin == "" {
 		panic("Empty origin")
 	}
+	if log == nil {
+		panic("Logger is nil")
+	}
 
 	oClient = client.New(origin)
+	plog = log
 
-	dbgLog.Printf("port: %d", port)
-	dbgLog.Printf("origin: %s", origin)
+	plog.Infof("port: %d", port)
+	plog.Infof("origin: %s", origin)
 
 	mux := http.NewServeMux()
 	// Register handler func
@@ -81,17 +84,17 @@ func Start(port int, origin string) {
 	}
 
 	if err := server.ListenAndServe(); err != nil {
-		errLog.Printf("%v", err)
+		plog.Errorf("%v", err)
 	}
 }
 
 // shutdown proxy
 func ShutDown() {
-	dbgLog.Println("Shutting down gracefully")
+	plog.Debugf("Shutting down gracefully\n")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		errLog.Printf("%v", err)
+		plog.Errorf("%v\n", err)
 	}
-	dbgLog.Println("Server shut down")
+	plog.Debugf("Server shut down\n")
 }

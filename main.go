@@ -1,6 +1,7 @@
 package main
 
 import (
+	"caching-proxy/logger"
 	"caching-proxy/proxy"
 	"flag"
 	"os"
@@ -10,12 +11,13 @@ import (
 
 func main() {
 
-	port := flag.Int("port", 3000, "the port on which the caching proxy server will run")
+	port := flag.Int("port", 0, "the port on which the caching proxy server will run")
 	origin := flag.String("origin", "", "the URL of the server to which the requests will be forwarded")
+	dbg := flag.Bool("debug", false, "turn on debug logs")
 	flag.Parse()
 
 	// start proxy in another goroutine (thread)
-	go proxy.Start(*port, *origin)
+	go proxy.Start(*port, *origin, logger.New(*dbg))
 
 	// add signal handler
 	quit := make(chan os.Signal, 1)                    // create a channel for signals
