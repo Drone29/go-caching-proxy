@@ -11,7 +11,7 @@ type Request struct {
 	Headers map[string][]string `json:"headers"`
 	// request only
 	Method string `json:"-"` // don't need to save this to json
-	Uri    string `json:"-"` // don't need to save this to json
+	Uri    string `json:"uri"`
 	// response only
 	RespStatus string `json:"status"`
 	RespCode   int    `json:"code"`

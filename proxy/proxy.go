@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const cacheBackup = "cache.bak"
+
 var (
 	server  *http.Server
 	oClient *client.Client
@@ -71,9 +73,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	send_response(w, &resp)
 }
 
-// start proxy
-func Start(port int, origin string, log *logger.Logger) {
-
+// do some setup work at start
+func setup(port int, origin string, log *logger.Logger) {
 	if port <= 0 {
 		panic("Invalid port")
 	}
@@ -86,7 +87,13 @@ func Start(port int, origin string, log *logger.Logger) {
 
 	plog = log
 	oClient = client.New(origin, log)
-	pcache = cache.New()
+	pcache = cache.New(origin, cacheBackup)
+}
+
+// start proxy
+func Start(port int, origin string, log *logger.Logger) {
+
+	setup(port, origin, log)
 
 	plog.Infof("port: %d", port)
 	plog.Infof("origin: %s", origin)
@@ -101,7 +108,12 @@ func Start(port int, origin string, log *logger.Logger) {
 	}
 
 	if err := server.ListenAndServe(); err != nil {
-		plog.Errorf("%v", err)
+		plog.Errorf("%v\n", err)
+	}
+
+	// backup cache to file
+	if err := pcache.Backup(); err != nil {
+		plog.Errorf("%v\n", err)
 	}
 }
 
