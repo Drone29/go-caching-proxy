@@ -17,14 +17,6 @@ type Request struct {
 	RespCode   int    `json:"code"`
 }
 
-// create an alias to ensure MarshalJSON() is not called recursively
-type aliasRequest Request
-
-type auxRequest struct {
-	*aliasRequest
-	Body string `json:"body"` //serialize body as string (json will utilize base64)
-}
-
 // store in json file using this format
 type auxRequestWithHost struct {
 	Host     string    `json:"host"`
@@ -33,35 +25,10 @@ type auxRequestWithHost struct {
 
 type reqMap = map[string][]Request
 
-// custom json marshaler for request
-func (r *Request) MarshalJSON() ([]byte, error) {
-	aux := &auxRequest{
-		aliasRequest: (*aliasRequest)(r),
-		Body:         string(r.Body),
-	}
-	return json.Marshal(aux)
-}
-
-// custom json unmarshaler for request
-func (r *Request) UnmarshalJSON(data []byte) error {
-	aux := &auxRequest{
-		aliasRequest: (*aliasRequest)(r),
-	}
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-	// convert body to []byte
-	r.Body = []byte(aux.Body)
-	return nil
-}
-
 // backup requests for single host to json file
 func BackupOne(filename, host string, requests []Request) error {
-	// read all currently backed up records
-	records, err := RestoreAll(filename)
-	if err != nil {
-		return err
-	}
+	// read all currently backed up records (ignore errors)
+	records, _ := RestoreAll(filename)
 	// update map
 	records[host] = requests
 	return BackupMany(filename, records)

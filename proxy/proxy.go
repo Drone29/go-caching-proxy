@@ -19,6 +19,7 @@ var (
 	oClient *client.Client
 	plog    *logger.Logger
 	pcache  *cache.Cache
+	stopMon chan struct{} // stop channel for backup monitor
 )
 
 // recover function
@@ -66,6 +67,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		resp.Headers["X-Cache"] = []string{"MISS"}
 	} else {
 		// exists
+		// TODO: FIX
 		plog.Debugf("found request existing in cache\n")
 		resp.Headers["X-Cache"] = []string{"HIT"}
 	}
@@ -88,6 +90,29 @@ func setup(port int, origin string, log *logger.Logger) {
 	plog = log
 	oClient = client.New(origin, log)
 	pcache = cache.New(origin, cacheBackup)
+	stopMon = make(chan struct{})
+}
+
+// cache backup monitor
+func backup_monitor(seconds time.Duration) {
+	ticker := time.NewTicker(seconds * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			// periodically backup cache to file
+			if pcache.HasChanged() {
+				plog.Debugf("Backing up cache\n")
+				if err := pcache.Backup(); err != nil {
+					plog.Errorf("backup error %v\n", err)
+				}
+			}
+		case <-stopMon:
+			// return if explicitly stopped
+			plog.Debugf("Backup monitor stopped")
+			return
+		}
+	}
 }
 
 // start proxy
@@ -97,6 +122,9 @@ func Start(port int, origin string, log *logger.Logger) {
 
 	plog.Infof("port: %d", port)
 	plog.Infof("origin: %s", origin)
+
+	// run backup monitor in a separate thread
+	go backup_monitor(1)
 
 	mux := http.NewServeMux()
 	// Register handler func
@@ -120,6 +148,8 @@ func Start(port int, origin string, log *logger.Logger) {
 // shutdown proxy
 func ShutDown() {
 	plog.Debugf("Shutting down gracefully\n")
+	// close stop channel to stop monitor thread
+	close(stopMon)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {

@@ -9,10 +9,11 @@ type Request = request.Request
 
 // thread-safe cache
 type Cache struct {
-	mtx    sync.RWMutex
-	host   string
-	backup string
-	store  map[string]Request
+	mtx      sync.RWMutex
+	host     string
+	backup   string
+	store    map[string]Request
+	prevSize int
 }
 
 // create new cache instance
@@ -26,9 +27,10 @@ func New(host, backup string) *Cache {
 		}
 	}
 	return &Cache{
-		store:  mp,
-		host:   host,
-		backup: backup,
+		store:    mp,
+		host:     host,
+		backup:   backup,
+		prevSize: len(mp),
 	}
 }
 
@@ -64,12 +66,22 @@ func (c *Cache) Clear() {
 	}
 }
 
+func (c *Cache) HasChanged() bool {
+	c.mtx.RLock() // lock r
+	defer c.mtx.RUnlock()
+	return len(c.store) != c.prevSize
+}
+
 func (c *Cache) Backup() error {
 	c.mtx.Lock() // lock rw
 	defer c.mtx.Unlock()
+	// backup to file
 	reqs := make([]Request, len(c.store))
+	c.prevSize = len(c.store)
+	i := 0
 	for _, v := range c.store {
-		reqs = append(reqs, v)
+		reqs[i] = v
+		i++
 	}
 	return request.BackupOne(c.backup, c.host, reqs)
 }
