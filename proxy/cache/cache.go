@@ -2,6 +2,7 @@ package cache
 
 import (
 	"caching-proxy/proxy/request"
+	"strings"
 	"sync"
 )
 
@@ -23,7 +24,7 @@ func New(host, backup string) *Cache {
 	mp := make(map[string]Request)
 	if r, ok := reqs[host]; ok {
 		for _, v := range r {
-			mp[v.Uri] = v
+			mp[v.Method+"::"+v.Uri] = v
 		}
 	}
 	return &Cache{
@@ -38,7 +39,7 @@ func New(host, backup string) *Cache {
 func (c *Cache) Put(key string, val Request) {
 	c.mtx.Lock() // lock rw
 	defer c.mtx.Unlock()
-	val.Uri = key
+	val.Method, val.Uri, _ = strings.Cut(key, "::")
 	c.store[key] = val
 }
 

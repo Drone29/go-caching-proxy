@@ -51,8 +51,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		url += "?" + r.URL.RawQuery
 	}
 
+	// TODO: check also method
+	cache_key := r.Method + "::" + url
 	// check if exists in cache
-	resp, ok := pcache.Get(url)
+	resp, ok := pcache.Get(cache_key)
 	if !ok {
 		// doesn't exist
 		plog.Debugf("sending %s request to %s\n", r.Method, url)
@@ -63,11 +65,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			Body:    helpers.ReadBody(r.Body),
 		})
 		plog.Debugf("saving %s to cache\n", url)
-		pcache.Put(url, resp)
+		pcache.Put(cache_key, resp)
 		resp.Headers["X-Cache"] = []string{"MISS"}
 	} else {
 		// exists
-		// TODO: FIX
 		plog.Debugf("found request existing in cache\n")
 		resp.Headers["X-Cache"] = []string{"HIT"}
 	}

@@ -10,7 +10,7 @@ type Request struct {
 	Body    []byte              `json:"body"`
 	Headers map[string][]string `json:"headers"`
 	// request only
-	Method string `json:"-"` // don't need to save this to json
+	Method string `json:"method"`
 	Uri    string `json:"uri"`
 	// response only
 	RespStatus string `json:"status"`
