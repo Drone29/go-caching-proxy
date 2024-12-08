@@ -20,7 +20,10 @@ type Cache struct {
 // create new cache instance
 func New(host, backup string) *Cache {
 	// restore from backup
-	reqs, _ := request.Restore(backup)
+	reqs, err := request.Restore(backup)
+	if err != nil {
+		panic("error restoring cache from backup")
+	}
 	mp := make(map[string]Request)
 	for _, v := range reqs {
 		mp[v.Method+"::"+v.Uri] = v

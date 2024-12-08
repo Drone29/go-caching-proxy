@@ -40,6 +40,11 @@ func backup_io(w io.Writer, requests []Request) error {
 func Restore(filename string) (requests []Request, err error) {
 	f, err := os.Open(filename)
 	if err != nil {
+		if os.IsNotExist(err) {
+			// create new file
+			// populate file with empty data
+			err = Backup(filename, []Request{})
+		}
 		return
 	}
 	defer f.Close()

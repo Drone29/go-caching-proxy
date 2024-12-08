@@ -12,8 +12,6 @@ import (
 	"time"
 )
 
-const cacheBackup = "cache.bak"
-
 var (
 	server  *http.Server
 	oClient *client.Client
@@ -32,7 +30,6 @@ func recover_hdl(w http.ResponseWriter) {
 
 // send response to the caller
 func send_response(w http.ResponseWriter, resp *request.Request) {
-
 	for key, values := range resp.Headers {
 		for _, value := range values {
 			w.Header().Add(key, value)
@@ -77,7 +74,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 // do some setup work at start
-func setup(port int, origin string, log *logger.Logger) {
+func setup(port int, origin string, backup string, log *logger.Logger) {
 	if port <= 0 {
 		panic("Invalid port")
 	}
@@ -90,7 +87,7 @@ func setup(port int, origin string, log *logger.Logger) {
 
 	plog = log
 	oClient = client.New(origin, log)
-	pcache = cache.New(origin, cacheBackup)
+	pcache = cache.New(origin, backup)
 	stopMon = make(chan struct{})
 }
 
@@ -117,9 +114,9 @@ func backup_monitor(seconds time.Duration) {
 }
 
 // start proxy
-func Start(port int, origin string, log *logger.Logger) {
+func Start(port int, origin string, backup string, log *logger.Logger) {
 
-	setup(port, origin, log)
+	setup(port, origin, backup, log)
 
 	plog.Infof("port: %d", port)
 	plog.Infof("origin: %s", origin)
