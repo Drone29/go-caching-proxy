@@ -76,15 +76,12 @@ func (client *Client) SendRequest(request *Request) Request {
 	req.Header = request.Headers
 	req.Header.Set("Host", client.origin)
 
-	// client.clog.Debugf("request headers: %v\n", req.Header)
-
 	resp, err := client.handle.Do(req)
 	if err != nil {
 		panic(fmt.Sprintf("Error sending %s request to %s: %v\n", request.Method, client.origin, err))
 	}
 
 	client.clog.Debugf("response status %s\n", resp.Status)
-	// client.clog.Debugf("response headers %v\n", resp.Header)
 
 	return Request{
 		Body:       helpers.ReadBody(resp.Body),
