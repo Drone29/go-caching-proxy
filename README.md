@@ -12,6 +12,17 @@ Cache is backed up to a file periodically
 caching-proxy --port <number> --origin <url>
 ```
 
+Example:
+```sh
+caching-proxy --port 3000 --origin http://dummyjson.com
+```
+
+If the origin scheme is omitted, http:// is presumed:
+```sh
+caching-proxy --port 3000 --origin dummyjson.com
+# origin is effectively http://dummyjson.com
+```
+
 ## Additional flags
 
 ```sh
