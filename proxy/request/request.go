@@ -2,6 +2,7 @@ package request
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 )
 
@@ -17,58 +18,37 @@ type Request struct {
 	RespCode   int    `json:"code"`
 }
 
-// store in json file using this format
-type auxRequestWithHost struct {
-	Host     string    `json:"host"`
-	Requests []Request `json:"requests"`
-}
-
-type reqMap = map[string][]Request
-
-// backup requests for single host to json file
-func BackupOne(filename, host string, requests []Request) error {
-	// read all currently backed up records (ignore errors)
-	records, _ := RestoreAll(filename)
-	// update map
-	records[host] = requests
-	return BackupMany(filename, records)
-}
-
 // backup multiple requests for multiple hosts
 // requests - a map of host-[]requests pairs
-func BackupMany(filename string, requests reqMap) error {
-	// convert to intermediary types
-	backup := []auxRequestWithHost{}
-	for k, v := range requests {
-		backup = append(backup, auxRequestWithHost{
-			Host:     k,
-			Requests: v,
-		})
-	}
-
+func Backup(filename string, requests []Request) error {
 	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	encoder := json.NewEncoder(f)
-	return encoder.Encode(backup)
+	return backup_io(f, requests)
+}
+
+// takes generic io.Writer, useful for tests
+func backup_io(w io.Writer, requests []Request) error {
+	encoder := json.NewEncoder(w)
+	return encoder.Encode(requests)
 }
 
 // restore all requests for all hosts
 // requests - a map of host-[]requests pairs
-func RestoreAll(filename string) (requests reqMap, err error) {
-	requests = make(reqMap)
-	records := []auxRequestWithHost{}
+func Restore(filename string) (requests []Request, err error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return
 	}
 	defer f.Close()
-	decoder := json.NewDecoder(f)
-	err = decoder.Decode(&records)
-	for _, v := range records {
-		requests[v.Host] = v.Requests
-	}
+	return restore_io(f)
+}
+
+// takes generic io.Reader, useful for tests
+func restore_io(r io.Reader) (requests []Request, err error) {
+	decoder := json.NewDecoder(r)
+	err = decoder.Decode(&requests)
 	return requests, err
 }

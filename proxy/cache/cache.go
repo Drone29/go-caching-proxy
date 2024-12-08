@@ -20,12 +20,10 @@ type Cache struct {
 // create new cache instance
 func New(host, backup string) *Cache {
 	// restore from backup
-	reqs, _ := request.RestoreAll(backup)
+	reqs, _ := request.Restore(backup)
 	mp := make(map[string]Request)
-	if r, ok := reqs[host]; ok {
-		for _, v := range r {
-			mp[v.Method+"::"+v.Uri] = v
-		}
+	for _, v := range reqs {
+		mp[v.Method+"::"+v.Uri] = v
 	}
 	return &Cache{
 		store:    mp,
@@ -74,8 +72,8 @@ func (c *Cache) HasChanged() bool {
 }
 
 func (c *Cache) Backup() error {
-	c.mtx.Lock() // lock rw
-	defer c.mtx.Unlock()
+	c.mtx.RLock() // lock r
+	defer c.mtx.RUnlock()
 	// backup to file
 	reqs := make([]Request, len(c.store))
 	c.prevSize = len(c.store)
@@ -84,5 +82,5 @@ func (c *Cache) Backup() error {
 		reqs[i] = v
 		i++
 	}
-	return request.BackupOne(c.backup, c.host, reqs)
+	return request.Backup(c.backup, reqs)
 }
